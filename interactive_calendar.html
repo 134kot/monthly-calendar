@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#f7f4ee">
+<title>My Calendar</title>
+<style>
+:root{--bg:#f7f4ee;--card:#fff;--ink:#263238;--muted:#758087;--line:#dde3e3;--blue:#4d7791;--blueSoft:#e3eef4;--sage:#5f8b76;--sageSoft:#e4efe9;--coral:#bd6b62;--coralSoft:#f7e5e1;--gold:#9b7a2d;--goldSoft:#f7edcd;--purple:#786a9b;--purpleSoft:#ece8f5}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.app{max-width:720px;margin:auto;padding:18px 14px 70px}
+header{display:flex;align-items:center;justify-content:space-between;margin:10px 2px 16px}h1{font-size:29px;margin:0}.todayBtn,.nav{border:0;border-radius:12px;background:var(--blueSoft);color:var(--blue);font-weight:700;padding:10px 12px}
+.monthbar{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;margin-bottom:10px}.monthbar h2{text-align:center;margin:0;font-size:21px}.nav{font-size:22px;padding:7px}
+.calendar{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:10px;box-shadow:0 2px 8px #00000008}.weekdays,.days{display:grid;grid-template-columns:repeat(7,1fr)}.weekdays div{text-align:center;color:var(--muted);font-size:11px;font-weight:700;padding:7px 0}
+.day{min-height:75px;border-top:1px solid #edf0f0;border-right:1px solid #edf0f0;padding:5px;overflow:hidden}.day:nth-child(7n){border-right:0}.num{font-size:12px;font-weight:700;width:25px;height:25px;display:flex;align-items:center;justify-content:center;border-radius:50%}.outside{opacity:.32}.today .num{background:var(--blue);color:#fff}
+.chip{font-size:9px;font-weight:700;border-radius:6px;padding:3px 4px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.expense{background:var(--coralSoft);color:var(--coral)}.income{background:var(--sageSoft);color:var(--sage)}.savings{background:var(--goldSoft);color:var(--gold)}.other{background:var(--purpleSoft);color:var(--purple)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;margin-top:14px}.card h3{margin:0 0 12px;font-size:18px}
+.eventRow{display:grid;grid-template-columns:10px 1fr auto;gap:9px;align-items:center;padding:11px 0;border-bottom:1px solid #edf0f0}.eventRow:last-child{border:0}.dot{width:9px;height:9px;border-radius:50%}.dot.expense{background:var(--coral)}.dot.income{background:var(--sage)}.dot.savings{background:var(--gold)}.dot.other{background:var(--purple)}.meta{font-size:12px;color:var(--muted);margin-top:2px}.amt{font-weight:750}
+button.primary{width:100%;border:0;border-radius:14px;background:var(--blue);color:#fff;padding:13px;font-size:15px;font-weight:750;margin-top:14px}
+.modal{position:fixed;inset:0;background:#1d272c77;display:none;align-items:flex-end;justify-content:center;padding:0;z-index:20}.sheet{background:#fff;width:100%;max-width:720px;border-radius:24px 24px 0 0;padding:20px 18px calc(22px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto}.sheet h3{font-size:21px;margin:0 0 14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}label{display:block;font-size:12px;color:var(--muted);margin:3px 0 5px}input,select{width:100%;font:inherit;font-size:16px;padding:12px;border:1px solid #ccd6d8;border-radius:12px;background:#fff;color:var(--ink)}
+.actions{display:flex;gap:8px;margin-top:15px}.actions button{flex:1;border:0;border-radius:13px;padding:12px;font-weight:700}.saveBtn{background:var(--blue);color:#fff}.cancelBtn{background:#edf1f2;color:var(--ink)}.deleteBtn{background:var(--coralSoft);color:var(--coral)}
+.legend{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.legend span{font-size:11px;border-radius:99px;padding:5px 8px}.empty{color:var(--muted);font-size:14px;padding:8px 0}
+@media(max-width:420px){.day{min-height:68px;padding:3px}.chip{font-size:8px;padding:2px 3px}.calendar{padding:7px}.app{padding-left:10px;padding-right:10px}}
+</style></head>
+<body><div class="app">
+<header><h1>My Calendar</h1><button class="todayBtn" id="todayBtn">Today</button></header>
+<div class="monthbar"><button class="nav" id="prev">‹</button><h2 id="monthTitle"></h2><button class="nav" id="next">›</button></div>
+<div class="calendar"><div class="weekdays"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div><div class="days" id="days"></div></div>
+<div class="legend"><span class="income">Income</span><span class="expense">Expense / bill</span><span class="savings">Savings</span><span class="other">Other</span></div>
+<button class="primary" id="add">+ Add calendar item</button>
+<div class="card"><h3 id="upcomingTitle">Upcoming</h3><div id="upcoming"></div></div>
+</div>
+
+<div class="modal" id="modal"><div class="sheet">
+<h3 id="formTitle">Add calendar item</h3>
+<div class="grid">
+<div class="full"><label>Name</label><input id="name" placeholder="Mortgage, payday, appointment…"></div>
+<div><label>Date</label><input id="date" type="date"></div>
+<div><label>Amount (optional)</label><input id="amount" type="number" inputmode="decimal" step=".01"></div>
+<div><label>Type</label><select id="type"><option value="expense">Expense / bill</option><option value="income">Income</option><option value="savings">Savings</option><option value="other">Other</option></select></div>
+<div><label>Repeat</label><select id="repeat"><option value="none">Does not repeat</option><option value="weekly">Weekly</option><option value="biweekly">Every 2 weeks</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></div>
+<div class="full"><label>Notes (optional)</label><input id="notes" placeholder="Anything you want to remember"></div>
+</div>
+<div class="actions"><button class="cancelBtn" id="cancel">Cancel</button><button class="saveBtn" id="save">Save</button></div>
+<div class="actions" id="deleteWrap" style="display:none"><button class="deleteBtn" id="delete">Delete item</button></div>
+</div></div>
+
+<script>
+const KEY="simpleCalendarV1", $=x=>document.getElementById(x);
+let items=[]; try{items=JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){}
+let view=new Date(), editing=null;
+const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const parse=s=>{let [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d,12)};
+const money=n=>Number(n).toLocaleString("en-US",{style:"currency",currency:"USD"});
+const addDays=(d,n)=>{let x=new Date(d);x.setDate(x.getDate()+n);return x};
+function saveData(){localStorage.setItem(KEY,JSON.stringify(items))}
+function occurs(item,date){
+ let first=parse(item.date); if(date<first)return false;
+ if(item.repeat==="none")return iso(date)===item.date;
+ if(item.repeat==="weekly"||item.repeat==="biweekly"){let diff=Math.round((date-first)/86400000);return diff%(item.repeat==="weekly"?7:14)===0}
+ if(item.repeat==="monthly")return date.getDate()===Math.min(first.getDate(),new Date(date.getFullYear(),date.getMonth()+1,0).getDate());
+ if(item.repeat==="yearly")return date.getMonth()===first.getMonth()&&date.getDate()===first.getDate();
+ return false;
+}
+function itemsOn(date){return items.filter(x=>occurs(x,date))}
+function render(){
+ let y=view.getFullYear(),m=view.getMonth();$("monthTitle").textContent=view.toLocaleDateString("en-US",{month:"long",year:"numeric"});
+ let first=new Date(y,m,1,12), start=addDays(first,-first.getDay()), box=$("days");box.innerHTML="";
+ for(let i=0;i<42;i++){let d=addDays(start,i), ev=itemsOn(d), cell=document.createElement("div");cell.className="day"+(d.getMonth()!=m?" outside":"")+(iso(d)===iso(new Date())?" today":"");
+  cell.innerHTML=`<div class="num">${d.getDate()}</div>`+ev.slice(0,3).map(e=>`<div class="chip ${e.type}">${e.name}${e.amount?` ${money(e.amount)}`:""}</div>`).join("")+(ev.length>3?`<div class="chip other">+${ev.length-3} more</div>`:"");
+  cell.onclick=()=>openForm(null,iso(d));box.appendChild(cell)}
+ renderUpcoming();
+}
+function renderUpcoming(){
+ let start=new Date();start.setHours(12,0,0,0);let rows=[];
+ for(let i=0;i<45;i++){let d=addDays(start,i);itemsOn(d).forEach(item=>rows.push({item,date:new Date(d)}))}
+ let box=$("upcoming");box.innerHTML=rows.length?"":'<div class="empty">Nothing scheduled in the next 45 days.</div>';
+ rows.slice(0,30).forEach(r=>{let e=document.createElement("div");e.className="eventRow";e.innerHTML=`<span class="dot ${r.item.type}"></span><div><b>${r.item.name}</b><div class="meta">${r.date.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})}${r.item.repeat!=="none"?" • recurring":""}</div></div><div class="amt">${r.item.amount?money(r.item.amount):""}</div>`;e.onclick=()=>openForm(r.item.id);box.appendChild(e)})
+}
+function openForm(id=null,date=null){
+ editing=id;let item=items.find(x=>x.id===id);
+ $("formTitle").textContent=item?"Edit calendar item":"Add calendar item";$("name").value=item?.name||"";$("date").value=item?.date||date||iso(new Date());$("amount").value=item?.amount??"";$("type").value=item?.type||"expense";$("repeat").value=item?.repeat||"none";$("notes").value=item?.notes||"";$("deleteWrap").style.display=item?"flex":"none";$("modal").style.display="flex";
+}
+$("save").onclick=()=>{if(!$("name").value.trim()||!$("date").value)return alert("Please add a name and date.");let obj={id:editing||Date.now(),name:$("name").value.trim(),date:$("date").value,amount:$("amount").value===""?"":Number($("amount").value),type:$("type").value,repeat:$("repeat").value,notes:$("notes").value};if(editing){let i=items.findIndex(x=>x.id===editing);items[i]=obj}else items.push(obj);saveData();close();render()};
+$("delete").onclick=()=>{if(confirm("Delete this calendar item?")){items=items.filter(x=>x.id!==editing);saveData();close();render()}};
+function close(){$("modal").style.display="none";editing=null}
+$("cancel").onclick=close;$("modal").onclick=e=>{if(e.target===$("modal"))close()};
+$("add").onclick=()=>openForm();$("prev").onclick=()=>{view=new Date(view.getFullYear(),view.getMonth()-1,1);render()};$("next").onclick=()=>{view=new Date(view.getFullYear(),view.getMonth()+1,1);render()};$("todayBtn").onclick=()=>{view=new Date();render()};
+render();
+</script></body></html>
